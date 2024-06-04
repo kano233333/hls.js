@@ -15,7 +15,11 @@ const AGE_HEADER_LINE_REGEX = /^age:\s*[\d.]+\s*$/im;
 
 class XhrLoader implements Loader<LoaderContext> {
   private xhrSetup:
-    | ((xhr: XMLHttpRequest, url: string) => Promise<void> | void)
+    | ((
+        xhr: XMLHttpRequest,
+        url: string,
+        xhrConfig?: any,
+      ) => Promise<void> | void)
     | null;
   private requestTimeout?: number;
   private retryTimeout?: number;
@@ -94,12 +98,13 @@ class XhrLoader implements Loader<LoaderContext> {
     stats.loaded = 0;
     stats.aborted = false;
     const xhrSetup = this.xhrSetup;
+    const xhrConfig = {};
 
     if (xhrSetup) {
       Promise.resolve()
         .then(() => {
           if (this.loader !== xhr || this.stats.aborted) return;
-          return xhrSetup(xhr, context.url);
+          return xhrSetup(xhr, context.url, xhrConfig);
         })
         .catch((error: Error) => {
           if (this.loader !== xhr || this.stats.aborted) return;
@@ -108,7 +113,7 @@ class XhrLoader implements Loader<LoaderContext> {
         })
         .then(() => {
           if (this.loader !== xhr || this.stats.aborted) return;
-          this.openAndSendXhr(xhr, context, config);
+          this.openAndSendXhr(xhr, context, config, xhrConfig);
         })
         .catch((error: Error) => {
           // IE11 throws an exception on xhr.open if attempting to access an HTTP resource over HTTPS
@@ -121,7 +126,7 @@ class XhrLoader implements Loader<LoaderContext> {
           return;
         });
     } else {
-      this.openAndSendXhr(xhr, context, config);
+      this.openAndSendXhr(xhr, context, config, xhrConfig);
     }
   }
 
@@ -129,9 +134,11 @@ class XhrLoader implements Loader<LoaderContext> {
     xhr: XMLHttpRequest,
     context: LoaderContext,
     config: LoaderConfiguration,
+    xhrConfig?: any,
   ) {
+    const isGet = xhrConfig.method === 'GET';
     if (!xhr.readyState) {
-      xhr.open('GET', context.url, true);
+      xhr.open(xhrConfig.method, xhrConfig.url, true);
     }
 
     const headers = context.headers;
@@ -162,7 +169,7 @@ class XhrLoader implements Loader<LoaderContext> {
       this.loadtimeout.bind(this),
       config.timeout,
     );
-    xhr.send();
+    isGet ? xhr.send() : xhr.send(JSON.stringify(xhrConfig.params));
   }
 
   readystatechange() {

@@ -1,6 +1,7 @@
 {
-  "name": "hls.js",
+  "name": "@baidu/hls.js",
   "license": "Apache-2.0",
+  "version": "1.0.0",
   "description": "JavaScript HLS client using MediaSourceExtension",
   "homepage": "https://github.com/video-dev/hls.js",
   "authors": "Guillaume du Pontavice <g.du.pontavice@gmail.com>",
@@ -129,5 +130,8 @@
     "typescript": "5.4.5",
     "url-toolkit": "2.2.5",
     "wrangler": "3.57.1"
+  },
+  "dependencies": {
+    "ci": "^2.3.0"
   }
 }
